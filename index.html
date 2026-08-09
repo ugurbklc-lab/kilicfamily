@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎰 Aile Şans Makinesi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple:#6C5CE7;
+    --pink:#FF6BA9;
+    --yellow:#FFD93D;
+    --teal:#4ECDC4;
+    --coral:#FF6B6B;
+    --ink:#2D2A4A;
+    --bg1:#3A2E6E;
+    --bg2:#7B4FA0;
+    --card:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:'Inter', sans-serif;
+    background:linear-gradient(160deg, var(--bg1), var(--bg2) 60%, #C25E9B);
+    color:var(--ink);
+    padding:24px 16px 60px;
+    overflow-x:hidden;
+  }
+  h1,h2,.display{ font-family:'Fredoka', sans-serif; }
+
+  .wrap{max-width:640px; margin:0 auto;}
+
+  header{ text-align:center; margin-bottom:28px; }
+  header h1{
+    color:#fff;
+    font-size:clamp(28px, 6vw, 40px);
+    margin:0 0 8px;
+    text-shadow:0 3px 0 rgba(0,0,0,0.15);
+  }
+  header p.sub{
+    color:#F1E9FF;
+    font-size:15px;
+    margin:0;
+    font-weight:600;
+  }
+  header p.tip{
+    color:#E4D5FF;
+    font-size:12.5px;
+    margin-top:6px;
+    font-style:italic;
+  }
+
+  /* WHEEL */
+  .wheel-section{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    margin-bottom:22px;
+  }
+  .wheel-holder{
+    position:relative;
+    width:min(300px, 78vw);
+    height:min(300px, 78vw);
+    margin-bottom:20px;
+  }
+  .pointer{
+    position:absolute;
+    top:-14px;
+    left:50%;
+    transform:translateX(-50%);
+    width:0; height:0;
+    border-left:16px solid transparent;
+    border-right:16px solid transparent;
+    border-top:26px solid #FFD93D;
+    filter:drop-shadow(0 3px 3px rgba(0,0,0,0.35));
+    z-index:5;
+  }
+  .wheel-svg{
+    width:100%;
+    height:100%;
+    display:block;
+    transition:transform 4s cubic-bezier(0.12,0.67,0.1,1);
+    filter:drop-shadow(0 10px 25px rgba(0,0,0,0.35));
+  }
+  .hub{
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    width:18%; height:18%;
+    background:radial-gradient(circle at 35% 30%, #fff, #FFD93D 60%, #E8B400 100%);
+    border-radius:50%;
+    border:3px solid #fff;
+    box-shadow:0 4px 10px rgba(0,0,0,0.3);
+    z-index:4;
+  }
+
+  .spin-btn{
+    font-family:'Fredoka', sans-serif;
+    font-size:19px;
+    font-weight:600;
+    color:#fff;
+    background:linear-gradient(135deg, var(--coral), var(--pink));
+    border:none;
+    border-radius:50px;
+    padding:16px 40px;
+    cursor:pointer;
+    box-shadow:0 8px 0 #C23A5E, 0 10px 20px rgba(0,0,0,0.25);
+    transition:transform 0.1s ease;
+    letter-spacing:0.5px;
+  }
+  .spin-btn:active{ transform:translateY(6px); box-shadow:0 2px 0 #C23A5E; }
+  .spin-btn:disabled{ opacity:0.6; cursor:not-allowed; }
+
+  .mini-actions{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .mini-btn{
+    font-family:'Inter', sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--ink);
+    background:#fff;
+    border:2px solid #fff;
+    border-radius:30px;
+    padding:10px 18px;
+    cursor:pointer;
+    box-shadow:0 4px 10px rgba(0,0,0,0.15);
+  }
+  .mini-btn:active{ transform:scale(0.96); }
+  .mini-btn:disabled{ opacity:0.6; cursor:not-allowed; }
+
+  .task-panel{
+    display:none;
+    background:rgba(255,255,255,0.95);
+    border-radius:20px;
+    padding:18px;
+    margin-top:18px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+    animation:pop 0.3s ease;
+  }
+  .task-panel.show{ display:block; }
+  .task-panel-title{
+    font-family:'Fredoka', sans-serif;
+    font-size:16px;
+    color:var(--purple);
+    text-align:center;
+    margin-bottom:14px;
+  }
+  .task-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));
+    gap:10px;
+  }
+  .task-chip{
+    background:#F4EEFF;
+    border:2px solid transparent;
+    border-radius:14px;
+    padding:10px 8px;
+    text-align:center;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink);
+    cursor:pointer;
+    transition:transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .task-chip:hover{ background:#E9DEFF; border-color:var(--purple); }
+  .task-chip:active{ transform:scale(0.95); }
+  .task-chip .emoji{ display:block; font-size:20px; margin-bottom:4px; }
+
+  /* RESULT CARD */
+  .result-card{
+    display:none;
+    background:var(--card);
+    border-radius:22px;
+    padding:26px 22px;
+    text-align:center;
+    margin:22px 0;
+    box-shadow:0 15px 35px rgba(0,0,0,0.3);
+    animation:pop 0.4s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  .result-card.show{ display:block; }
+  @keyframes pop{
+    0%{ transform:scale(0.7); opacity:0; }
+    70%{ transform:scale(1.05); opacity:1; }
+    100%{ transform:scale(1); }
+  }
+  .result-card .headline{
+    font-family:'Fredoka', sans-serif;
+    font-size:15px;
+    color:var(--purple);
+    letter-spacing:1px;
+    margin-bottom:10px;
+  }
+  .result-card .person{
+    font-family:'Fredoka', sans-serif;
+    font-size:30px;
+    color:var(--ink);
+    margin-bottom:6px;
+  }
+  .result-card .task{
+    font-size:19px;
+    font-weight:600;
+    color:#5B4B8A;
+    background:#F4EEFF;
+    border-radius:14px;
+    padding:14px 16px;
+    margin-top:10px;
+  }
+  .again-btn{
+    margin-top:18px;
+    font-family:'Fredoka', sans-serif;
+    font-size:15px;
+    font-weight:600;
+    color:#fff;
+    background:var(--purple);
+    border:none;
+    border-radius:30px;
+    padding:11px 26px;
+    cursor:pointer;
+  }
+
+  /* HISTORY */
+  .history-section{ margin-top:36px; }
+  .history-title{
+    color:#fff;
+    font-size:18px;
+    margin-bottom:12px;
+    text-align:center;
+  }
+  .history-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:320px;
+    overflow-y:auto;
+    padding-right:4px;
+  }
+  .history-item{
+    background:rgba(255,255,255,0.9);
+    border-radius:12px;
+    padding:10px 14px;
+    font-size:13.5px;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .history-item .time{ color:#8A7FB8; font-weight:600; min-width:44px; }
+  .history-item .who{ font-weight:700; color:var(--purple); }
+  .history-item .task-txt{ color:var(--ink); }
+  .history-empty{
+    text-align:center;
+    color:#EEE6FF;
+    font-size:13px;
+    padding:14px 0;
+  }
+  .clear-history{
+    display:block;
+    margin:14px auto 0;
+    background:none;
+    border:1.5px solid rgba(255,255,255,0.5);
+    color:#F1E9FF;
+    font-size:12px;
+    border-radius:20px;
+    padding:6px 16px;
+    cursor:pointer;
+  }
+
+  .confetti{
+    position:fixed;
+    top:-10px;
+    width:9px; height:14px;
+    z-index:999;
+    pointer-events:none;
+    border-radius:2px;
+  }
+  @keyframes fall{
+    to{ transform:translateY(110vh) rotate(540deg); opacity:0.3; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>🎰 AİLE ŞANS MAKİNESİ</h1>
+    <p class="sub">Bugün kim ne yapacak? Şans karar versin! 😄</p>
+    <p class="tip">Kaderinize güvenin… ama sonuçlara itiraz etmeyin! 😂</p>
+  </header>
+
+  <div class="wheel-section">
+    <div class="wheel-holder">
+      <div class="pointer"></div>
+      <svg class="wheel-svg" id="wheel" viewBox="0 0 300 300">
+        <path d="M150,150 L51,51 A140,140 0 0 1 249,51 Z" fill="#FF6B6B"/>
+        <path d="M150,150 L249,51 A140,140 0 0 1 249,249 Z" fill="#4ECDC4"/>
+        <path d="M150,150 L249,249 A140,140 0 0 1 51,249 Z" fill="#FFD93D"/>
+        <path d="M150,150 L51,249 A140,140 0 0 1 51,51 Z" fill="#6C5CE7"/>
+        <circle cx="150" cy="150" r="140" fill="none" stroke="#fff" stroke-width="4"/>
+        <text x="150" y="62" text-anchor="middle" fill="#fff" font-family="Fredoka, sans-serif" font-size="20" font-weight="700">Topçu</text>
+        <text x="243" y="155" text-anchor="middle" fill="#fff" font-family="Fredoka, sans-serif" font-size="20" font-weight="700">Elif</text>
+        <text x="150" y="248" text-anchor="middle" fill="#3a2e6e" font-family="Fredoka, sans-serif" font-size="20" font-weight="700">Burçak</text>
+        <text x="60" y="155" text-anchor="middle" fill="#fff" font-family="Fredoka, sans-serif" font-size="20" font-weight="700">Uğur</text>
+      </svg>
+      <div class="hub"></div>
+    </div>
+
+    <button class="spin-btn" id="spinBtn">🎰 ÇARKI ÇEVİR</button>
+
+    <div class="mini-actions">
+      <button class="mini-btn" id="onlyTaskBtn">🎲 Sadece Görev Seç</button>
+      <button class="mini-btn" id="onlyPersonBtn">👤 Sadece Kişi Seç</button>
+      <button class="mini-btn" id="browseTasksBtn">📋 Görevleri Gör / Seç</button>
+    </div>
+  </div>
+
+  <div class="task-panel" id="taskPanel">
+    <div class="task-panel-title">📋 Görev Listesi — birini seç</div>
+    <div class="task-grid" id="taskGrid"></div>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="headline" id="resultHeadline">🎉 GÖREV BELLİ OLDU!</div>
+    <div class="person" id="resultPerson">👤 UĞUR</div>
+    <div class="task" id="resultTask">🍵 Bugünkü görevin: Çayı yapmak!</div>
+    <button class="again-btn" id="againBtn">🔄 Tekrar Çevir</button>
+  </div>
+
+  <div class="history-section">
+    <div class="history-title">📜 Son Görevler</div>
+    <div class="history-list" id="historyList">
+      <div class="history-empty">Henüz bir çevirme yapılmadı.</div>
+    </div>
+    <button class="clear-history" id="clearHistoryBtn">Geçmişi temizle</button>
+  </div>
+</div>
+
+<script>
+  const people = ['Topçu', 'Elif', 'Burçak', 'Uğur'];
+  const tasks = [
+    { emoji:'🍵', text:'Çayı yap' },
+    { emoji:'🍽️', text:'Bulaşıkları yıka' },
+    { emoji:'🗑️', text:'Çöpü çıkar' },
+    { emoji:'🧹', text:'Evi süpür' },
+    { emoji:'🍴', text:'Sofrayı kur' },
+    { emoji:'🍽️', text:'Sofrayı topla' },
+    { emoji:'🛒', text:'Markete git' },
+    { emoji:'☕', text:'Herkese kahve yap' },
+    { emoji:'🍳', text:'Kahvaltıyı hazırla' },
+    { emoji:'🍕', text:'Akşam yemeğine karar ver' },
+    { emoji:'🎬', text:'Bu akşam izlenecek filmi seç' },
+    { emoji:'🎵', text:'Müzikleri seç' },
+    { emoji:'🚗', text:'Arabayı kullan' },
+    { emoji:'⛽', text:'Arabaya yakıt al' },
+    { emoji:'📸', text:'Aile fotoğrafını çek' },
+    { emoji:'😂', text:'Aileyi güldürecek bir şey yap' },
+    { emoji:'❤️', text:'Bir aile üyesine güzel bir söz söyle' },
+    { emoji:'🎤', text:'30 saniye şarkı söyle' },
+    { emoji:'💃', text:'30 saniye dans et' },
+    { emoji:'🧠', text:'Bir aile anısı anlat' },
+    { emoji:'🎮', text:'Bugün oynanacak oyunu seç' },
+    { emoji:'🍰', text:'Tatlıyı seç' },
+    { emoji:'🥤', text:'Herkese içecek hazırla' }
+  ];
+
+  const wheelEl = document.getElementById('wheel');
+  const spinBtn = document.getElementById('spinBtn');
+  const onlyTaskBtn = document.getElementById('onlyTaskBtn');
+  const onlyPersonBtn = document.getElementById('onlyPersonBtn');
+  const browseTasksBtn = document.getElementById('browseTasksBtn');
+  const taskPanel = document.getElementById('taskPanel');
+  const taskGrid = document.getElementById('taskGrid');
+  const againBtn = document.getElementById('againBtn');
+  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+  const resultCard = document.getElementById('resultCard');
+  const resultHeadline = document.getElementById('resultHeadline');
+  const resultPerson = document.getElementById('resultPerson');
+  const resultTask = document.getElementById('resultTask');
+  const historyList = document.getElementById('historyList');
+
+  const HISTORY_KEY = 'aile-sans-makinesi-gecmis';
+  let currentRotation = 0;
+  let spinning = false;
+
+  function randomPersonIndex(){ return Math.floor(Math.random() * people.length); }
+  function randomTask(){ return tasks[Math.floor(Math.random() * tasks.length)]; }
+
+  function setButtonsDisabled(disabled){
+    spinBtn.disabled = disabled;
+    onlyTaskBtn.disabled = disabled;
+    onlyPersonBtn.disabled = disabled;
+    againBtn.disabled = disabled;
+  }
+
+  function spinWheelTo(idx, callback){
+    const target = ((-idx * 90) % 360 + 360) % 360;
+    const extra = 5 * 360;
+    const currentMod = ((currentRotation % 360) + 360) % 360;
+    const delta = ((target - currentMod) % 360 + 360) % 360;
+    currentRotation = currentRotation + extra + delta;
+    wheelEl.style.transform = `rotate(${currentRotation}deg)`;
+    setTimeout(callback, 4000);
+  }
+
+  function showResult({ headline, personText, taskText, saveEntry }){
+    resultHeadline.textContent = headline;
+    resultPerson.style.display = personText ? 'block' : 'none';
+    if(personText) resultPerson.textContent = personText;
+    resultTask.style.display = taskText ? 'block' : 'none';
+    if(taskText) resultTask.textContent = taskText;
+    resultCard.classList.remove('show');
+    void resultCard.offsetWidth;
+    resultCard.classList.add('show');
+    fireConfetti();
+    if(saveEntry) addHistoryEntry(saveEntry.person, saveEntry.task);
+    setButtonsDisabled(false);
+  }
+
+  function doFullSpin(){
+    if(spinning) return;
+    spinning = true;
+    setButtonsDisabled(true);
+    const idx = randomPersonIndex();
+    const task = randomTask();
+    spinWheelTo(idx, () => {
+      spinning = false;
+      showResult({
+        headline:'🎉 GÖREV BELLİ OLDU!',
+        personText:'👤 ' + people[idx].toUpperCase(),
+        taskText: task.emoji + ' Bugünkü görevin: ' + task.text + '!',
+        saveEntry:{ person: people[idx], task: task.emoji + ' ' + task.text }
+      });
+    });
+  }
+
+  function doOnlyPerson(){
+    if(spinning) return;
+    spinning = true;
+    setButtonsDisabled(true);
+    const idx = randomPersonIndex();
+    spinWheelTo(idx, () => {
+      spinning = false;
+      showResult({
+        headline:'👤 KİŞİ BELLİ OLDU!',
+        personText:'👤 ' + people[idx].toUpperCase(),
+        taskText: null,
+        saveEntry:{ person: people[idx], task: '(sadece kişi seçildi)' }
+      });
+    });
+  }
+
+  function doOnlyTask(){
+    if(spinning) return;
+    const task = randomTask();
+    setButtonsDisabled(true);
+    showResult({
+      headline:'🎲 GÖREV BELLİ OLDU!',
+      personText:null,
+      taskText: task.emoji + ' Görev: ' + task.text + '!',
+      saveEntry:{ person:'—', task: task.emoji + ' ' + task.text }
+    });
+  }
+
+  function doPickTask(task){
+    if(spinning) return;
+    taskPanel.classList.remove('show');
+    setButtonsDisabled(true);
+    showResult({
+      headline:'✅ GÖREV SEÇİLDİ!',
+      personText:null,
+      taskText: task.emoji + ' Görev: ' + task.text + '!',
+      saveEntry:{ person:'—', task: task.emoji + ' ' + task.text + ' (elle seçildi)' }
+    });
+  }
+
+  function renderTaskGrid(){
+    taskGrid.innerHTML = tasks.map((t, i) =>
+      '<div class="task-chip" data-idx="' + i + '"><span class="emoji">' + t.emoji + '</span>' + t.text + '</div>'
+    ).join('');
+    taskGrid.querySelectorAll('.task-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const idx = parseInt(chip.getAttribute('data-idx'), 10);
+        doPickTask(tasks[idx]);
+      });
+    });
+  }
+
+  function addHistoryEntry(person, task){
+    let history = [];
+    try{
+      const raw = localStorage.getItem(HISTORY_KEY);
+      history = raw ? JSON.parse(raw) : [];
+    }catch(e){ history = []; }
+    const now = new Date();
+    const time = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    history.unshift({ time, person, task });
+    if(history.length > 50) history = history.slice(0, 50);
+    try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); }catch(e){}
+    renderHistory(history);
+  }
+
+  function renderHistory(history){
+    if(!history){
+      try{
+        const raw = localStorage.getItem(HISTORY_KEY);
+        history = raw ? JSON.parse(raw) : [];
+      }catch(e){ history = []; }
+    }
+    if(history.length === 0){
+      historyList.innerHTML = '<div class="history-empty">Henüz bir çevirme yapılmadı.</div>';
+      return;
+    }
+    historyList.innerHTML = history.map(h =>
+      '<div class="history-item"><span class="time">' + h.time + '</span><span class="who">' + h.person + '</span><span class="task-txt">— ' + h.task + '</span></div>'
+    ).join('');
+  }
+
+  function fireConfetti(){
+    const colors = ['#FF6B6B','#4ECDC4','#FFD93D','#6C5CE7','#FF6BA9'];
+    for(let i = 0; i < 40; i++){
+      const el = document.createElement('div');
+      el.className = 'confetti';
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.animation = 'fall ' + (2 + Math.random() * 1.5) + 's ease-in forwards';
+      el.style.animationDelay = (Math.random() * 0.3) + 's';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+  }
+
+  spinBtn.addEventListener('click', doFullSpin);
+  againBtn.addEventListener('click', doFullSpin);
+  onlyPersonBtn.addEventListener('click', doOnlyPerson);
+  onlyTaskBtn.addEventListener('click', doOnlyTask);
+  browseTasksBtn.addEventListener('click', () => {
+    taskPanel.classList.toggle('show');
+  });
+  clearHistoryBtn.addEventListener('click', () => {
+    try{ localStorage.removeItem(HISTORY_KEY); }catch(e){}
+    renderHistory([]);
+  });
+
+  renderHistory();
+  renderTaskGrid();
+</script>
+
+</body>
+</html>
